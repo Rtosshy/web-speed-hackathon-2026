@@ -51,11 +51,10 @@ searchRouter.get("/search", async (req, res) => {
   let postsByUser: typeof postsByText = [];
   if (searchTerm) {
     postsByUser = await Post.unscoped().findAll({
-      attributes: { exclude: ["userId", "movieId", "soundId"] },
+      subQuery: false,
       include: [
         {
           association: "user",
-          attributes: ["id", "username", "name", "description", "createdAt", "updatedAt", "profileImageId"],
           include: [{ association: "profileImage" }],
           required: true,
           where: {
@@ -69,8 +68,6 @@ searchRouter.get("/search", async (req, res) => {
         { association: "movie" },
         { association: "sound" },
       ],
-      limit,
-      offset,
       order: [["id", "DESC"]],
       where: dateWhere,
     });
