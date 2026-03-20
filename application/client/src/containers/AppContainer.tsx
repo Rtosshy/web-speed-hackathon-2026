@@ -3,20 +3,23 @@ import { Helmet, HelmetProvider } from "react-helmet";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 
 import { AppPage } from "@web-speed-hackathon-2026/client/src/components/application/AppPage";
+import { AuthModalContainer } from "@web-speed-hackathon-2026/client/src/containers/AuthModalContainer";
+import { Modal } from "@web-speed-hackathon-2026/client/src/components/modal/Modal";
 import { fetchJSON, sendJSON } from "@web-speed-hackathon-2026/client/src/utils/fetchers";
 
-// 遅延読み込みでコード分割
-const AuthModalContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/AuthModalContainer").then(m => ({ default: m.AuthModalContainer })));
+// ルートコンポーネントのみ遅延読み込み
 const CrokContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/CrokContainer").then(m => ({ default: m.CrokContainer })));
 const DirectMessageContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/DirectMessageContainer").then(m => ({ default: m.DirectMessageContainer })));
 const DirectMessageListContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/DirectMessageListContainer").then(m => ({ default: m.DirectMessageListContainer })));
-const NewPostModalContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer").then(m => ({ default: m.NewPostModalContainer })));
 const NotFoundContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/NotFoundContainer").then(m => ({ default: m.NotFoundContainer })));
 const PostContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/PostContainer").then(m => ({ default: m.PostContainer })));
 const SearchContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/SearchContainer").then(m => ({ default: m.SearchContainer })));
 const TermContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/TermContainer").then(m => ({ default: m.TermContainer })));
 const TimelineContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/TimelineContainer").then(m => ({ default: m.TimelineContainer })));
 const UserProfileContainer = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/UserProfileContainer").then(m => ({ default: m.UserProfileContainer })));
+
+// NewPostModal の中身だけ遅延読み込み（dialogシェルは即座にレンダリング）
+const LazyNewPostModalContent = lazy(() => import("@web-speed-hackathon-2026/client/src/containers/NewPostModalContainer").then(m => ({ default: m.NewPostModalContainer })));
 
 export const AppContainer = () => {
   const { pathname } = useLocation();
@@ -89,9 +92,12 @@ export const AppContainer = () => {
         </Suspense>
       </AppPage>
 
-      <Suspense fallback={null}>
-        <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
-        <NewPostModalContainer id={newPostModalId} />
+      {/* AuthModal は dialog が即座にDOMに必要 */}
+      <AuthModalContainer id={authModalId} onUpdateActiveUser={setActiveUser} />
+
+      {/* NewPostModal は dialog シェルを即座にレンダリングし、中身を遅延読み込み */}
+      <Suspense fallback={<Modal id={newPostModalId} closedby="any"><div /></Modal>}>
+        <LazyNewPostModalContent id={newPostModalId} />
       </Suspense>
     </HelmetProvider>
   );

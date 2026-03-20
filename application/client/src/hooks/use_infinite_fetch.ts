@@ -22,6 +22,12 @@ export function useInfiniteFetch<T>(
   });
 
   const fetchMore = useCallback(() => {
+    // apiPath が空の場合はフェッチしない
+    if (!apiPath) {
+      setResult((cur) => ({ ...cur, isLoading: false }));
+      return;
+    }
+
     const { isLoading, offset, hasMore } = internalRef.current;
     if (isLoading || !hasMore) {
       return;
