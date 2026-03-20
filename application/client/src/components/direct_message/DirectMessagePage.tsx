@@ -74,7 +74,19 @@ export const DirectMessagePage = ({
 
   useEffect(() => {
     // 初期表示時とメッセージ更新時に一番下にスクロール
-    window.scrollTo(0, document.body.scrollHeight);
+    // レイアウト完了を待つために複数回試行
+    let count = 0;
+    let lastHeight = 0;
+    const scrollToBottom = () => {
+      const height = document.body.scrollHeight;
+      window.scrollTo(0, height);
+      if (count < 10 && (height !== lastHeight || count < 3)) {
+        lastHeight = height;
+        count++;
+        requestAnimationFrame(scrollToBottom);
+      }
+    };
+    requestAnimationFrame(scrollToBottom);
   }, [conversation.messages.length]);
 
   if (conversationError != null) {
